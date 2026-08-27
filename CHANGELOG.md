@@ -5,6 +5,14 @@ All notable changes to the **Back to Top / 回到顶部** SiYuan plugin will be 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-08-28
+
+### Fixed
+
+- Corrected the manifest field `plugin.json.url` to point to the actual plugin repository
+  (`https://github.com/hong602/com.sunazure.backtotop`) instead of the author's profile page,
+  so that the SiYuan Bazaar CI validation passes.
+
 ## [1.0.0] - 2026-08-28
 
 ### Added
