@@ -1,0 +1,24 @@
+{
+  "name": "com.sunazure.backtotop",
+  "author": "蔚蓝升阳",
+  "url": "https://github.com/hong602",
+  "version": "1.0.0",
+  "minAppVersion": "2.8.0",
+  "frontends": ["all"],
+  "backends": ["all"],
+  "disabledInPublish": false,
+  "displayName": {
+    "default": "Back to Top",
+    "zh-CN": "回到顶部"
+  },
+  "description": {
+    "default": "Add a floating 'Back to Top' button to the editor, similar to web pages.",
+    "zh-CN": "在编辑区添加一个悬浮的「回到顶部」按钮，与网页常见的回到顶部功能一致。"
+  },
+  "readme": {
+    "default": "README.md",
+    "zh-CN": "README_zh-CN.md"
+  },
+  "funding": {},
+  "keywords": ["back to top", "回到顶部", "scroll", "滚动", "floating button", "悬浮按钮"]
+}

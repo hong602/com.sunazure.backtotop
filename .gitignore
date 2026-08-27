@@ -1,0 +1,16 @@
+# Build artifacts
+*.syplugin
+*.zip
+!package.zip
+
+# Node / pnpm tooling (in case this project ever adds a build pipeline)
+node_modules/
+dist/
+.pnpm-store/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
