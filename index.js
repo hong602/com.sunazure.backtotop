@@ -2,12 +2,16 @@
  * 回到顶部 (Back to Top) 插件
  *
  * 关键（修复 "does not extends Plugin"）：
- *   必须使用 ES6 `class … extends Plugin` 关键字声明，并且直接作为
- *   module.exports.default 导出。不要用手动挂 prototype 的传统继承
- *   写法——思源内部校验不是只查 `instanceof`，还会检查源码/原型结构。
+ *   思源加载插件时把 index.js 包成 (function(require, module, exports){…})
+ *   执行，只注入这三个参数。Plugin 基类必须通过 require("siyuan") 获取，
+ *   不能假设它是外层参数或全局变量。
  */
 
 "use strict";
+
+// —— 从思源注入的 require("siyuan") 拿到真正的 Plugin 基类 ——
+var __siyuan = require("siyuan");
+var Plugin = __siyuan.Plugin;
 
 var BTN_ID = "sunazure-back-to-top-btn";
 var THRESHOLD = 120; // 触发高亮显示的滚动阈值（px）
@@ -200,10 +204,11 @@ function unbindListeners() {
 }
 
 /* ===================================================================
- * 插件类：必须使用 ES6 class 关键字真正 extends Plugin
- * Plugin 是外层函数参数注入的标识符：
- *   (function(Plugin, app, isMobile, …){ …代码… })(Plugin, app, …)
- * 所以这里直接写 `extends Plugin` 是合法的，不会报 ReferenceError。
+ * 插件类：ES6 class 关键字 extends Plugin
+ * Plugin 在文件顶部通过 require("siyuan") 获取，指向思源真正的基类，
+ * 这样才能通过 loader 的 `pluginClass.prototype instanceof Plugin` 校验，
+ * 否则思源会报 "does not extends Plugin" 并跳过实例化，onload/onunload
+ * 永远不会被调用。
  * =================================================================== */
 class BackToTopPlugin extends Plugin {
   constructor() {
@@ -223,6 +228,11 @@ class BackToTopPlugin extends Plugin {
       scheduleTimer(updateBtn, 800);
       scheduleTimer(updateBtn, 1600);
     };
+    // —— 生命周期内的安全网：无论 onLayoutReady 是否真的触发回调，
+    // 都在 1.5s 后兜底跑一次 kick。由于 ensureButton() 在按钮已存在时会
+    // 提前返回，重复调用无害；而这个定时器已登记到 pendingTimers，
+    // onunload() 能把它清掉，不会出现"禁用后死灰复燃"。
+    scheduleTimer(kick, 1500);
     if (self && typeof self.onLayoutReady === "function") {
       try { self.onLayoutReady(kick); return; }
       catch (e) { log("onLayoutReady 抛错：", e); }
