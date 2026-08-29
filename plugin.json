@@ -2,7 +2,7 @@
   "name": "com.sunazure.backtotop",
   "author": "蔚蓝升阳",
   "url": "https://github.com/hong602/com.sunazure.backtotop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minAppVersion": "2.8.0",
   "frontends": ["all"],
   "backends": ["all"],
