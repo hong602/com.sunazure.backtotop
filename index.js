@@ -133,6 +133,26 @@ function removeButton() {
   if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
 }
 
+/* ---------- 生命周期资源：定时器统一登记，onunload 时全部清理 ---------- */
+
+var pendingTimers = [];
+function scheduleTimer(fn, delay) {
+  var id = setTimeout(function () {
+    // 触发后从登记表里移除
+    var i = pendingTimers.indexOf(id);
+    if (i >= 0) pendingTimers.splice(i, 1);
+    fn();
+  }, delay);
+  pendingTimers.push(id);
+  return id;
+}
+function clearAllTimers() {
+  for (var i = 0; i < pendingTimers.length; i++) {
+    try { clearTimeout(pendingTimers[i]); } catch (_) {}
+  }
+  pendingTimers.length = 0;
+}
+
 /* ---------- 可见性更新 ---------- */
 
 var rafId = 0;
@@ -199,15 +219,15 @@ class BackToTopPlugin extends Plugin {
       ensureButton();
       bindListeners();
       updateBtn();
-      setTimeout(updateBtn, 200);
-      setTimeout(updateBtn, 800);
-      setTimeout(updateBtn, 1600);
+      scheduleTimer(updateBtn, 200);
+      scheduleTimer(updateBtn, 800);
+      scheduleTimer(updateBtn, 1600);
     };
     if (self && typeof self.onLayoutReady === "function") {
       try { self.onLayoutReady(kick); return; }
       catch (e) { log("onLayoutReady 抛错：", e); }
     }
-    var go = function () { setTimeout(kick, 50); };
+    var go = function () { scheduleTimer(kick, 50); };
     if (document.readyState === "complete" || document.readyState === "interactive") {
       go();
     } else {
@@ -216,8 +236,13 @@ class BackToTopPlugin extends Plugin {
   }
 
   onunload() {
-    log("onunload 触发");
+    log("onunload 触发：清理定时器、监听器、按钮 DOM");
+    // 1) 先清所有尚未触发的定时器（包括 kick 延迟、refresh 轮询），
+    //    否则它们会在插件禁用后再次操作 DOM。
+    clearAllTimers();
+    // 2) 移除事件监听 + 取消 rAF
     unbindListeners();
+    // 3) 移除按钮 DOM
     removeButton();
   }
 }
@@ -228,18 +253,8 @@ if (typeof module !== "undefined") {
   module.exports.default = BackToTopPlugin;
 }
 
-/* —— 兜底：如果标准加载链路因故未生效（调试/手动注入），也能跑 —— */
-(function fallback() {
-  try {
-    if (typeof window === "undefined") return;
-    if (window.__sunazureBackToTopLoaded) return;
-    setTimeout(function () {
-      if (document.getElementById(BTN_ID)) return;
-      window.__sunazureBackToTopLoaded = true;
-      log("兜底模式启动（标准 plugin 加载链路未生效）");
-      ensureButton();
-      bindListeners();
-      updateBtn();
-    }, 1200);
-  } catch (_) {}
-})();
+/* 注意：不再保留底部的 fallback IIFE 兜底逻辑。
+ * 之前的 fallback 用 setTimeout(1200ms) 无条件创建按钮，绕过了 Plugin
+ * 生命周期，导致用户禁用插件后按钮会"死灰复燃"，这正是维护者 review
+ * 指出的 bug。现在按钮的创建与销毁完全由 onload/onunload 控制，
+ * 生命周期行为可预测、可清理。 */
