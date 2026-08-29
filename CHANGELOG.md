@@ -5,6 +5,30 @@ All notable changes to the **Back to Top / 回到顶部** SiYuan plugin will be 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-08-29
+
+### Fixed
+
+- **Critical: plugin now actually loads.** Previous versions assumed the `Plugin`
+  base class was injected as a closure parameter by SiYuan's loader, but SiYuan
+  only injects `require` / `module` / `exports`. Without importing the real base
+  class, SiYuan's loader rejected the class with *"does not extends Plugin"*,
+  skipped instantiation entirely, and never called `onload()` / `onunload()`.
+  The button only appeared in 1.0.x because of the untracked fallback IIFE. Now
+  `Plugin` is obtained via `require("siyuan")`, the class passes the loader's
+  prototype check, and the full Plugin lifecycle is enforced.
+- Added a lifecycle-managed safety net (`scheduleTimer(kick, 1500)`) inside
+  `onload` so the button still appears even if `onLayoutReady` does not invoke
+  its callback in a given SiYuan build. Because it is registered through the
+  central timer registry, `onunload()` clears it on disable — no dangling DOM.
+
+### Notes
+
+- This release properly addresses all three points from the maintainer review
+  on bazaar PR #2174: button behavior now matches the README, the button is
+  fully removed when the plugin is disabled, and the feature is differentiated
+  from the editor's native buttons as a scroll-driven floating control.
+
 ## [1.0.2] - 2026-08-29
 
 ### Fixed
